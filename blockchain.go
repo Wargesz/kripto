@@ -6,20 +6,21 @@ import (
 	"fmt"
 )
 
+type Header struct {
+	PrevHash   string `json:"prevHash"`
+	MerkleRoot string `json:"merkleRoot"`
+	Nonce      int    `json:"nonce"`
+	Difficulty int    `json:"difficulty"`
+	Version    int    `json:"version"`
+}
+
 type Block struct {
-	header struct {
-		prevHash   string
-		merkleRoot string
-		nonce      int
-		difficulty int
-		version    int
-	}
-	merkleRoot string
-	merkleTree any
+	Header     Header `json:"header"`
+	MerkleTree tree   `json:"merkleTree"`
 }
 
 func (b *Block) hash() [32]byte {
-	data, err := json.Marshal(fmt.Sprintf("%v", b.header))
+	data, err := json.Marshal(fmt.Sprintf("%v", b.Header))
 	if err != nil {
 		must(err)
 	}
@@ -28,16 +29,16 @@ func (b *Block) hash() [32]byte {
 
 func (b *Block) mine() {
 	for !b.isDifficult() {
-		b.header.nonce++
+		b.Header.Nonce++
 	}
 }
 
 func (b *Block) isDifficult() bool {
 	hash := b.hash()
-	if b.header.difficulty < 0 || b.header.difficulty > len(hash) {
+	if b.Header.Difficulty < 0 || b.Header.Difficulty > len(hash) {
 		return false
 	}
-	for i := 0; i < b.header.difficulty; i++ {
+	for i := 0; i < b.Header.Difficulty; i++ {
 		if hash[i] != 0 {
 			return false
 		}

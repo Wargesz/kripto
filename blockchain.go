@@ -15,7 +15,7 @@ type Header struct {
 }
 
 type Block struct {
-	Header     Header `json:"header"`
+	Header     Header
 	MerkleTree tree   `json:"merkleTree"`
 }
 

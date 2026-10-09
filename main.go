@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 )
 
 var tranChan chan Transaction
 var blockchain []Block
 var users []User
+var libraries map[string][]Book
 
 func main() {
 	initializeBlockChain()
@@ -19,17 +22,36 @@ func main() {
 	go minerWorker()
 	r := bufio.NewReader(os.Stdin)
 	if len(users) == 0 {
-		fmt.Println("username:")
+		fmt.Print("username: ")
 		username, err := r.ReadString('\n')
 		must(err)
 		users = append(users, newUser(username))
 	}
+	loadBooks()
 	for {
+		print("\033[2J\033[H")
+		showBooks()
+		print(">")
 		msg, err := r.ReadString('\n')
 		must(err)
-		t := Transaction{Msg: msg, UserPublicKey: users[0].PublicKey}
+		params := strings.Split(msg[:len(msg)-1], " ")
+		bookIndex, err := strconv.Atoi(params[1])
+		must(err)
+		transactionMessage := fmt.Sprintf("%s %s->%s", libraries[params[0]][bookIndex], params[0], params[2])
+		moveBook(params[0], bookIndex, params[2])
+		t := Transaction{Msg: transactionMessage, UserPublicKey: users[0].PublicKey}
 		t.sign(users[0].PrivateKey)
 		tranChan <- t
+	}
+}
+
+func initializeUser() {
+	r := bufio.NewReader(os.Stdin)
+	if len(users) == 0 {
+		fmt.Println("username:")
+		username, err := r.ReadString('\n')
+		must(err)
+		users = append(users, newUser(username))
 	}
 }
 
@@ -63,7 +85,6 @@ func minerWorker() {
 
 func extendBlockchain(transactions [4]Transaction) {
 	var transactionString []string
-	fmt.Println(transactions)
 	for _, transaction := range transactions {
 		if !transaction.verify() {
 			must(errors.New("failed to verify transaction"))

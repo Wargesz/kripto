@@ -5,7 +5,7 @@ import "crypto/ed25519"
 type Transaction struct {
 	Msg           string `json:"msg"`
 	UserPublicKey []byte `json:"userpublickey"`
-	Signature     string `json:"siganture"`
+	Signature     string `json:"signature"`
 }
 
 func generateKeys() (ed25519.PublicKey, ed25519.PrivateKey) {
